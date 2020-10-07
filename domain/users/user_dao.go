@@ -3,6 +3,7 @@ package users
 import (
 	"fmt"
 
+	"github.com/amit-dhakad/bookstore_user-api/utils/dateutils"
 	"github.com/amit-dhakad/bookstore_user-api/utils/errors"
 )
 
@@ -33,6 +34,8 @@ func (user *User) Save() *errors.RestErr {
 		}
 		return errors.NewBadRequestError(fmt.Sprintf("user %d already exits", user.ID))
 	}
+
+	user.DateCreated = dateutils.GetNowString()
 	usersDB[user.ID] = user
 	return nil
 }
