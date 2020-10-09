@@ -3,6 +3,7 @@ package users
 import (
 	"fmt"
 
+	"github.com/amit-dhakad/bookstore_user-api/datasources/mysql/usersdb"
 	"github.com/amit-dhakad/bookstore_user-api/utils/dateutils"
 	"github.com/amit-dhakad/bookstore_user-api/utils/errors"
 )
@@ -13,6 +14,9 @@ var (
 
 // Get get userby id
 func (user *User) Get() *errors.RestErr {
+	if err := usersdb.Client.Ping(); err != nil {
+		panic(err)
+	}
 	result := usersDB[user.ID]
 	if result == nil {
 		return errors.NewNotFoundError(fmt.Sprintf("user %d not found", user.ID))
