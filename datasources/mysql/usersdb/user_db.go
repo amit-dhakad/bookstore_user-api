@@ -7,6 +7,7 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql" // mysql driver
+	"github.com/joho/godotenv"
 )
 
 const (
@@ -17,13 +18,14 @@ const (
 )
 
 // Client return db connection object
+
 var (
 	Client *sql.DB
 
-	username = os.Getenv(mysqlUsersUsername)
-	password = os.Getenv(mysqlUsersPassword)
-	host     = os.Getenv(mysqlUsersHost)
-	schema   = os.Getenv(mysqlUserSchema)
+	username = getEnvVariable(mysqlUsersUsername)
+	password = getEnvVariable(mysqlUsersPassword)
+	host     = getEnvVariable(mysqlUsersHost)
+	schema   = getEnvVariable(mysqlUserSchema)
 )
 
 func init() {
@@ -38,4 +40,15 @@ func init() {
 		panic(err)
 	}
 	log.Println("database successfully configured")
+}
+
+func getEnvVariable(key string) string {
+	// load .env file
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	return os.Getenv(key)
 }
