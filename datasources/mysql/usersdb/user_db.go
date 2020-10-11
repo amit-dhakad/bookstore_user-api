@@ -18,10 +18,8 @@ const (
 )
 
 // Client return db connection object
-
 var (
-	Client *sql.DB
-
+	Client   *sql.DB
 	username = getEnvVariable(mysqlUsersUsername)
 	password = getEnvVariable(mysqlUsersPassword)
 	host     = getEnvVariable(mysqlUsersHost)
@@ -30,7 +28,8 @@ var (
 
 func init() {
 	dataSourceName := fmt.Sprintf("%s:%s@tcp(%s)/%s", username, password, host, schema)
-	Client, err := sql.Open("mysql", dataSourceName)
+	var err error
+	Client, err = sql.Open("mysql", dataSourceName)
 
 	if err != nil {
 		panic(err)
