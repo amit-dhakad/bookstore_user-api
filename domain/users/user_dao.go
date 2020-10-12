@@ -11,7 +11,9 @@ import (
 
 const (
 	indexUniqueEmail = "email_UNIQUE"
+	errorNoRows      = "no rows in result set"
 	queryInsertUser  = "INSERT INTO users(first_name,last_name, email, date_created) VALUES(?,?,?,?);"
+	queryGetUser     = "SELECT id, first_name,last_name, email, date_created FROM users WHERE id=?;"
 )
 
 var (
@@ -20,18 +22,23 @@ var (
 
 // Get get userby id
 func (user *User) Get() *errors.RestErr {
-	if err := usersdb.Client.Ping(); err != nil {
-		panic(err)
+	stmt, err := usersdb.Client.Prepare(queryGetUser)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+
 	}
-	result := usersDB[user.ID]
-	if result == nil {
-		return errors.NewNotFoundError(fmt.Sprintf("user %d not found", user.ID))
+
+	defer stmt.Close()
+	result := stmt.QueryRow(user.ID)
+	if err := result.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated); err != nil {
+		fmt.Println(err)
+
+		if strings.Contains(err.Error(), errorNoRows) {
+			return errors.NewNotFoundError(
+				fmt.Sprintf("user %d does not exits", user.ID))
+		}
+		return errors.NewInternalServerError(fmt.Sprintf("error when trying to get user %d: %s", user.ID, err.Error()))
 	}
-	user.ID = result.ID
-	user.FirstName = result.FirstName
-	user.LastName = result.LastName
-	user.Email = result.Email
-	user.DateCreated = result.DateCreated
 	return nil
 }
 
