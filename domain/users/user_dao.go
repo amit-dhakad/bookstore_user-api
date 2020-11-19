@@ -1,6 +1,8 @@
 package users
 
 import (
+	"fmt"
+
 	"github.com/amit-dhakad/bookstore_user-api/datasources/mysql/usersdb"
 	"github.com/amit-dhakad/bookstore_user-api/utils/dateutils"
 	"github.com/amit-dhakad/bookstore_user-api/utils/errors"
@@ -8,10 +10,11 @@ import (
 )
 
 const (
-	queryInsertUser = "INSERT INTO users(first_name,last_name, email, date_created) VALUES(?,?,?,?);"
-	queryGetUser    = "SELECT id, first_name,last_name, email, date_created FROM users WHERE id=?;"
-	queryUpdateUser = "UPDATE users SET first_name=?,last_name=?, email=? WHERE id=?;"
-	queryDeleteUser = "DELETE FROM users WHERE id=?;"
+	queryInsertUser       = "INSERT INTO users(first_name,last_name, email, date_created) VALUES(?,?,?,?);"
+	queryGetUser          = "SELECT id, first_name,last_name, email, date_created FROM users WHERE id=?;"
+	queryUpdateUser       = "UPDATE users SET first_name=?,last_name=?, email=? WHERE id=?;"
+	queryDeleteUser       = "DELETE FROM users WHERE id=?;"
+	queryFindUserByStatus = "SELECT id, first_name, last_name, email, date_created statuss FROM user WHERE status=?:"
 )
 
 var (
@@ -97,4 +100,35 @@ func (user *User) Delete() *errors.RestErr {
 		return mysqlutils.ParseError(err)
 	}
 	return nil
+}
+
+// FindByStatus   find user by status
+func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
+	stmt, err := usersdb.Client.Prepare(queryFindUserByStatus)
+
+	if err != nil {
+		return nil, errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(status)
+	if err != nil {
+		return nil, errors.NewInternalServerError(err.Error())
+	}
+	defer rows.Close()
+
+	results := make([]User, 0)
+
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated, &user.Status); err != nil {
+			return nil, mysqlutils.ParseError(err)
+		}
+		results = append(results, user)
+	}
+
+	if len(results) == 0 {
+		return nil, errors.NewInternalServerError(fmt.Sprintf("no users matching status %s", status))
+	}
+	return results, nil
 }
