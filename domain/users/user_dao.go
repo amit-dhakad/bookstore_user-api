@@ -4,17 +4,16 @@ import (
 	"fmt"
 
 	"github.com/amit-dhakad/bookstore_user-api/datasources/mysql/usersdb"
-	"github.com/amit-dhakad/bookstore_user-api/utils/dateutils"
 	"github.com/amit-dhakad/bookstore_user-api/utils/errors"
 	"github.com/amit-dhakad/bookstore_user-api/utils/mysqlutils"
 )
 
 const (
-	queryInsertUser       = "INSERT INTO users(first_name,last_name, email, date_created) VALUES(?,?,?,?);"
-	queryGetUser          = "SELECT id, first_name,last_name, email, date_created FROM users WHERE id=?;"
+	queryInsertUser       = "INSERT INTO users(first_name,last_name, email, date_created, status, password) VALUES(?,?,?,?,?,?);"
+	queryGetUser          = "SELECT id, first_name,last_name, email, date_created, status FROM users WHERE id=?;"
 	queryUpdateUser       = "UPDATE users SET first_name=?,last_name=?, email=? WHERE id=?;"
 	queryDeleteUser       = "DELETE FROM users WHERE id=?;"
-	queryFindUserByStatus = "SELECT id, first_name, last_name, email, date_created statuss FROM user WHERE status=?:"
+	queryFindUserByStatus = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status=?;"
 )
 
 var (
@@ -31,7 +30,7 @@ func (user *User) Get() *errors.RestErr {
 
 	defer stmt.Close()
 	result := stmt.QueryRow(user.ID)
-	if getErr := result.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated); getErr != nil {
+	if getErr := result.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated, &user.Status); getErr != nil {
 		return mysqlutils.ParseError(getErr)
 	}
 	return nil
@@ -51,8 +50,7 @@ func (user *User) Save() *errors.RestErr {
 
 	defer stmt.Close()
 
-	user.DateCreated = dateutils.GetNowString()
-	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
+	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated, user.Status, user.Password)
 
 	if saveErr != nil {
 		return mysqlutils.ParseError(saveErr)
