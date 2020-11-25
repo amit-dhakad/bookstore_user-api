@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/amit-dhakad/bookstore_user-api/domain/users"
+	"github.com/amit-dhakad/bookstore_user-api/utils/cryptoutils"
 	"github.com/amit-dhakad/bookstore_user-api/utils/dateutils"
 	"github.com/amit-dhakad/bookstore_user-api/utils/errors"
 )
@@ -22,6 +23,7 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	}
 	user.Status = users.StatusActive
 	user.DateCreated = dateutils.GetNowDBFormat()
+	user.Password = cryptoutils.GetMd5(user.Password)
 	if err := user.Save(); err != nil {
 		return nil, err
 	}
